@@ -1,7 +1,7 @@
 from torch.utils.data import Dataset
 import torch
 import os
-from window_function import f_window_gen
+from .window_function import f_window_gen
 
 
 class FishDataset(Dataset):
@@ -40,8 +40,14 @@ class FishDataset(Dataset):
         data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'data', mode))
 
         cod_data = torch.load(os.path.join(data_dir, 'cod_data_' + mode + '_normalized.pt'))
+        cod_data = torch.reshape(cod_data, (cod_data.shape[0], 1, cod_data.shape[1], cod_data.shape[2]))
         salinity_data = torch.load(os.path.join(data_dir, 'salinity_' + mode + '_normalized.pt'))
+        salinity_data = torch.reshape(salinity_data,
+                                      (salinity_data.shape[0], 1, salinity_data.shape[1], salinity_data.shape[2]))
         temperature_data = torch.load(os.path.join(data_dir, 'sst_' + mode + '_normalized.pt'))
+        temperature_data = torch.reshape(temperature_data,
+                                         (temperature_data.shape[0], 1, temperature_data.shape[1],
+                                          temperature_data.shape[2]))
         data = torch.cat((cod_data, salinity_data, temperature_data), dim=1)
 
         del cod_data, salinity_data, temperature_data
@@ -68,4 +74,3 @@ class FishDataset(Dataset):
         :return: The input and target windows at the given index.
         """
         return self.data_time[idx], self.target_time[idx]
-
