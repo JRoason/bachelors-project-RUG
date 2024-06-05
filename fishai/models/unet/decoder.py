@@ -30,7 +30,7 @@ class Decoder(nn.Module):
         self.blocks = nn.ModuleList()
         for i in range(num_blocks):
             self.blocks.append(DecoderBlock(features * 2 ** (num_blocks - i), features * 2 ** (num_blocks - i - 1)))
-        self.final_conv = nn.Conv2d(features, 5, kernel_size=1)
+        self.final_conv = nn.Conv2d(features, 1, kernel_size=1)
 
     def forward(self, intermediates: list, x: torch.Tensor) -> torch.Tensor:
         """
