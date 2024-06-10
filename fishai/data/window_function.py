@@ -15,5 +15,5 @@ def f_window_gen(data: torch.Tensor, input_width: int, output_width: int, offset
     target_time = []
     for i in range(data.shape[0] - (input_width + output_width + offset_width)):
         data_time.append(data[i:i + input_width])
-        target_time.append(data[i + input_width + offset_width:i + input_width + output_width + offset_width])
+        target_time.append(data[i + input_width + offset_width:i + input_width + output_width + offset_width, 0])
     return data_time, target_time

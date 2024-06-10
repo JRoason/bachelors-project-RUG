@@ -1,5 +1,7 @@
 import torch
 import pickle
+import os
+import sys
 
 def normalize_train(x: torch.Tensor, name: str) -> torch.Tensor:
     
@@ -23,7 +25,9 @@ def normalize_train(x: torch.Tensor, name: str) -> torch.Tensor:
 
     # Save the minimum and maximum values, for later un-normalizing the outputs
 
-    file = open('minmax_values_' + name, 'wb')
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'data', 'train'))
+
+    file = open(path + '/minmax_values_' + name, 'wb')
 
     pickle.dump([min_value, max_value], file)
 
@@ -40,12 +44,14 @@ def normalize_train(x: torch.Tensor, name: str) -> torch.Tensor:
 
 def normalize_val(x: torch.Tensor, name: str) -> torch.Tensor:
 
-    if name not in ['sst', 'salinity', 'cod_data']:
+    if name not in ['sst', 'salinity', 'cod']:
         return
         
     nan_mask = torch.isnan(x)
+
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'data', 'train'))
         
-    file = open('fishai/data/minmax_values_' + name, 'rb')
+    file = open(path + '/minmax_values_' + name, 'rb')
 
     values = pickle.load(file)
 
@@ -56,10 +62,16 @@ def normalize_val(x: torch.Tensor, name: str) -> torch.Tensor:
     normalized_tensor[nan_mask] = 0.0
     
     return normalized_tensor
-    
-def unnormalize(x: torch.Tensor) -> torch.Tensor:
 
-    file = open('minmax_values_cod_data', 'rb')
+
+# TODO - Implement unnormalize function
+# This function should unnormalize the data using the min and max values saved during the normalization process
+# MISSING: set original NaN values back to NaN, right now they are set to 0 so unnormalizing directly will be incorrect
+def unnormalize(x: torch.Tensor, name: str) -> torch.Tensor:
+
+    path = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'data', 'train'))
+
+    file = open(path + '/minmax_values_' + name, 'rb')
 
     values = pickle.load(file)
 
@@ -68,7 +80,22 @@ def unnormalize(x: torch.Tensor) -> torch.Tensor:
     un_normalized_tensor = (x * (values[1] - values[0])) + values[0]
     
     return un_normalized_tensor
-    
 
-      
-    
+
+if __name__ == '__main__':
+    var = sys.argv[1]
+    name = sys.argv[2]
+    assert var in ['train', 'val', 'test'], 'Invalid mode'
+    assert name in ['sst', 'salinity', 'cod'], 'Invalid name'
+
+    data_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..', 'data', var))
+
+    data = torch.load(os.path.join(data_dir, name + '_' + var + '_data' + '.pt'))
+
+    if var == 'train':
+        data = normalize_train(data, name)
+        torch.save(data, os.path.join(data_dir, name + '_' + var + '_normalized.pt'))
+    else:
+        data = normalize_val(data, name)
+        torch.save(data, os.path.join(data_dir, name + '_' + var + '_normalized.pt'))
+

@@ -4,6 +4,8 @@ import torch.nn as nn
 from encoder import Encoder
 from decoder import Decoder
 
+import sys
+
 
 class UNet(nn.Module):
     """
@@ -43,11 +45,11 @@ class UNet(nn.Module):
 
 if __name__ == '__main__':
     # Example usage just to check the shapes of the output
-    data = torch.rand(5, 3, 192, 512)
+    data = torch.rand(5, 3, 128, 128)
     # In this case, the data is a tensor of shape (1, 30, 134, 410), representing a batch of 1 image with 30 channels, and a resolution of 134x410 pixels.
     # The 30 channels refer to 3 x 10 channels, where the 3 channels refer to the fish map matrix, salinity and temperature data.
     # While the 10 refers to the 10 time steps of the data.
     print(data.shape)
-    model = UNet(3, 3, 64)
+    model = UNet(3, int(sys.argv[1]), 64)
     output = model(data)
     print(output.shape)
