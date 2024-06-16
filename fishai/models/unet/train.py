@@ -183,18 +183,22 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
 
 
 if __name__ == '__main__':
-    hyperparameters = {
-        'name': 'unet_V1',
-        'epochs': 1,
-        'batch_size': 8,
-        'learning_rate': 0.001,
-        'input_width': 4,
-        'output_width': 4,
-        'offset_width': 0,
-        'dropout': True,
-        'early_stopping': True,
-        'device': 'cuda:0',
-    }
+    assert len(sys.argv) > 1, 'Please provide hyperparameters'
+    assert len(sys.argv) == 10, 'Please provide all hyperparameters'
+    hyperparameters = None
+    if len(sys.argv) > 1:
+        hyperparameters = {
+            'name': sys.argv[1],
+            'epochs': int(sys.argv[2]),
+            'batch_size': int(sys.argv[3]),
+            'learning_rate': float(sys.argv[4]),
+            'input_width': int(sys.argv[5]),
+            'output_width': int(sys.argv[6]),
+            'offset_width': int(sys.argv[7]),
+            'dropout': bool(sys.argv[8]),
+            'early_stopping': bool(sys.argv[9]),
+            'device': 'cuda:0' if torch.cuda.is_available() else 'cpu',
+        }
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     dir_path = os.path.dirname(os.path.realpath(__file__))
     if not os.path.exists(os.path.join(dir_path, hyperparameters['name'])):
