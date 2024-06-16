@@ -193,10 +193,12 @@ if __name__ == '__main__':
         'input_width': int(sys.argv[5]),
         'output_width': int(sys.argv[6]),
         'offset_width': int(sys.argv[7]),
-        'dropout': bool(sys.argv[8]),
-        'early_stopping': bool(sys.argv[9]),
+        'dropout': sys.argv[8] == 'True',
+        'early_stopping': sys.argv[9] == 'True',
         'device': 'cuda:0' if torch.cuda.is_available() else 'cpu',
     }
+    print(hyperparameters['dropout'])
+    print(hyperparameters['early_stopping'])
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     dir_path = os.path.dirname(os.path.realpath(__file__))
     if not os.path.exists(os.path.join(dir_path, hyperparameters['name'])):
