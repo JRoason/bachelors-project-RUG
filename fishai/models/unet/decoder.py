@@ -19,17 +19,19 @@ class Decoder(nn.Module):
         Convolutional layer for the final convolution operation.
     """
 
-    def __init__(self, num_blocks: int, features: int) -> None:
+    def __init__(self, num_blocks: int, features: int, dropout: bool) -> None:
         """
         Initializes a decoder for the UNet architecture.
 
         :param num_blocks: The number of decoder blocks in the decoder.
         :param features: The number of channels in the input to the first encoder block.
+        :param dropout: Whether to use dropout in the model.
         """
         super(Decoder, self).__init__()
         self.blocks = nn.ModuleList()
         for i in range(num_blocks):
-            self.blocks.append(DecoderBlock(features * 2 ** (num_blocks - i), features * 2 ** (num_blocks - i - 1)))
+            self.blocks.append(
+                DecoderBlock(features * 2 ** (num_blocks - i), features * 2 ** (num_blocks - i - 1), dropout=dropout))
         self.final_conv = nn.Conv2d(features, 1, kernel_size=1)
 
     def forward(self, intermediates: list, x: torch.Tensor) -> torch.Tensor:

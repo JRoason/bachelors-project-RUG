@@ -22,13 +22,14 @@ class Encoder(nn.Module):
         List of encoder blocks.
     """
 
-    def __init__(self, in_channels: int, num_blocks: int, features: int):
+    def __init__(self, in_channels: int, num_blocks: int, features: int, dropout: bool):
         """
         Initializes an encoder for the UNet architecture.
 
         :param in_channels: The number of input channels of the input data.
         :param num_blocks: The wanted number of encoder blocks.
         :param features: Number of channels in input to the first encoder block, multiplied by 2 for subsequent blocks.
+        :param dropout: Whether to use dropout in the model.
         """
         super(Encoder, self).__init__()
         self.conv_layer_1 = nn.Conv2d(in_channels, features, kernel_size=3, padding='same')
@@ -36,7 +37,7 @@ class Encoder(nn.Module):
         self.conv_layer_2 = nn.Conv2d(features, features, kernel_size=3, padding='same')
         self.blocks = nn.ModuleList()
         for i in range(num_blocks):
-            self.blocks.append(EncoderBlock(features * 2 ** i, features * 2 ** (i + 1)))
+            self.blocks.append(EncoderBlock(features * 2 ** i, features * 2 ** (i + 1), dropout=dropout))
 
     def forward(self, x: torch.Tensor) -> (list, torch.Tensor):
         """

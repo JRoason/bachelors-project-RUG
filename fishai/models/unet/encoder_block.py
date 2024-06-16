@@ -21,7 +21,7 @@ class EncoderBlock(nn.Module):
         Convolutional layer for the second convolution operation.
     """
 
-    def __init__(self, in_channels: int, out_channels: int) -> None:
+    def __init__(self, in_channels: int, out_channels: int, dropout: bool) -> None:
         """
         Initializes an encoder block.
 
@@ -33,6 +33,7 @@ class EncoderBlock(nn.Module):
         self.conv_layer_1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding='same')
         self.relu = nn.ReLU()
         self.conv_layer_2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding='same')
+        self.dropout = nn.Dropout(0.5) if dropout else None
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -43,6 +44,8 @@ class EncoderBlock(nn.Module):
         :return: The output tensor of the encoder block.
         """
         x = self.max_pool(x)
+        if self.dropout is not None:
+            x = self.dropout(x)
         x = self.conv_layer_1(x)
         x = self.relu(x)
         x = self.conv_layer_2(x)

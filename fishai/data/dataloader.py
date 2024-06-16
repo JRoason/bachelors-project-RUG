@@ -98,6 +98,7 @@ class FishDataset(Dataset):
 
             targetTensor = torch.block_diag(self.target_time[idx][0], self.target_time[idx][1],
                                             self.target_time[idx][2], self.target_time[idx][3])
+            targetTensor = torch.reshape(targetTensor, (1, targetTensor.shape[0], targetTensor.shape[1]))
         elif self.matrix_structure == 'quadrant':
             inputTensor = torch.zeros((3, (self.input_width // 2) * self.data.shape[2], (self.input_width // 2) * self.data.shape[2]))
             targetTensor = torch.zeros(((self.output_width // 2) * self.data.shape[2], (self.output_width // 2) * self.data.shape[2]))
@@ -113,6 +114,7 @@ class FishDataset(Dataset):
                 j = 0 if i == 0 or i == 3 else 1
                 targetTensor[i % 2 * self.data.shape[2]:(i % 2 + 1) * self.data.shape[2],
                 j * self.data.shape[2]:(j + 1) * self.data.shape[2]] = self.target_time[idx][i]
+            targetTensor = torch.reshape(targetTensor, (1, targetTensor.shape[0], targetTensor.shape[1]))
         elif self.matrix_structure == 'regular':
             inputTensor = torch.Tensor(self.data_time[idx])
             targetTensor = torch.Tensor(self.target_time[idx])

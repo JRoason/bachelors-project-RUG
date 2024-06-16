@@ -28,16 +28,18 @@ class DecoderBlock(nn.Module):
         Forward pass through the decoder block.
     """
 
-    def __init__(self, in_channels: int, out_channels: int) -> None:
+    def __init__(self, in_channels: int, out_channels: int, dropout: bool) -> None:
         """
         Initializes a decoder block.
 
         Parameters
         :param in_channels: The number of input channels of the input tensor.
         :param out_channels: The number of output channels of the decoder block.
+        :param dropout: Whether to use dropout in the model.
         """
         super(DecoderBlock, self).__init__()
         self.upconv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
+        self.dropout = nn.Dropout(0.5) if dropout else None
         self.conv_layer_1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding='same')
         self.relu = nn.ReLU()
         self.conv_layer_2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding='same')
@@ -58,6 +60,8 @@ class DecoderBlock(nn.Module):
         x = self.upconv(x)
         down_tensor = CenterCrop(x.shape[2:])(down_tensor)
         x = torch.cat([x, down_tensor], dim=1)
+        if self.dropout is not None:
+            x = self.dropout(x)
         x = self.conv_layer_1(x)
         x = self.relu(x)
         x = self.conv_layer_2(x)
