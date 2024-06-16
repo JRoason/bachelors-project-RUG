@@ -4,16 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [[source]]
-url = "https://download.pytorch.org/whl/cu118"
+url = "https://download.pytorch.org/whl/cu121"
 verify_ssl = false
 name = "pytorch"
 
 [packages]
 pre-commit = "*"
 numpy = "*"
-torch = {version = "*", index = "pytorch"}
-torchvision = {version = "*", index = "pytorch"}
-torchaudio = {version = "*", index = "pytorch"}
 pandas = "*"
 geopandas = "*"
 seaborn = "*"
@@ -29,6 +26,9 @@ bottleneck = "*"
 global-land-mask = "*"
 basemap = "*"
 basemap-data-hires = "*"
+torch = {version = "*", index = "pytorch"}
+torchaudio = {version = "*", index = "pytorch"}
+torchvision = {version = "*", index = "pytorch"}
 
 [dev-packages]
 
