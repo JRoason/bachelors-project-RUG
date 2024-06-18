@@ -110,7 +110,7 @@ def test(loader: DataLoader, model: Module, criterion: Module, device: str) -> l
 
 def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, input_width: int, num_blocks: int,
                 output_width: int, offset_width: int, matrix_structure: str, dropout: bool,
-                early_stopping: bool, device: str) -> None:
+                early_stopping: bool, device: str, directory_path: str) -> None:
     """
     Train the UNet model on the fish data.
 
@@ -126,6 +126,7 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     :param dropout: Whether to use dropout.
     :param early_stopping: Whether to use early stopping.
     :param device: The device to train the model on.
+    :param directory_path: The path to the directory.
     """
 
     model = UNet(3, num_blocks, 64, dropout).to(device)
@@ -163,10 +164,10 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             early_stopping_count = 0
-            with open(f'{name}/{matrix_structure}_best_model.txt', 'w') as f:
+            with open(f'{os.path.join(directory_path, name)}/{matrix_structure}_best_model.txt', 'w') as f:
                 f.write(f'Epoch {epoch + 1}/{epochs}\n')
                 f.write(f'Validation Loss: {best_val_loss}\n')
-            torch.save(model.state_dict(), f'{name}/{matrix_structure}_best_model.pt')
+            torch.save(model.state_dict(), f'{os.path.join(directory_path, name)}/{matrix_structure}_best_model.pt')
         val_losses.append(val_loss)
         if early_stopping_count is not None and epoch > 1:
             if val_loss == val_losses[-2]:
@@ -177,9 +178,9 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
         if epoch == epochs - 1:
             training_status.set_description_str(f'Finished training at epoch {epoch + 1}/{epochs}')
 
-    torch.save(model.state_dict(), f'{name}/{matrix_structure}_final_model.pt')
-    torch.save(train_losses, f'{name}/{matrix_structure}_train_losses.pt')
-    torch.save(val_losses, f'{name}/{matrix_structure}_val_losses.pt')
+    torch.save(model.state_dict(), f'{os.path.join(directory_path, name)}/{matrix_structure}_final_model.pt')
+    torch.save(train_losses, f'{os.path.join(directory_path, name)}/{matrix_structure}_train_losses.pt')
+    torch.save(val_losses, f'{os.path.join(directory_path, name)}/{matrix_structure}_val_losses.pt')
 
     training_status.set_description(f'Model saved')
     training_status.close()
@@ -204,10 +205,11 @@ if __name__ == '__main__':
     }
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     dir_path = os.path.dirname(os.path.realpath(__file__))
+    hyperparameters['directory_path'] = dir_path
     if not os.path.exists(os.path.join(dir_path, hyperparameters['name'])):
         os.mkdir(os.path.join(dir_path, hyperparameters['name']))
     model_name = hyperparameters['name']
-    with open(f'{model_name}/hyperparameters.txt', 'w') as f:
+    with open(f'{os.path.join(dir_path, model_name)}/hyperparameters.txt', 'w') as f:
         json.dump(hyperparameters, f)
     print("Training model, matrix_structure='diagonal'")
     hyperparameters['matrix_structure'] = 'diagonal'
@@ -215,7 +217,7 @@ if __name__ == '__main__':
     print("Training model, matrix_structure='quadrant'")
     hyperparameters['matrix_structure'] = 'quadrant'
     train_model(**hyperparameters)
-    with open(f'{model_name}/finished.txt', 'w') as f:
+    with open(f'{os.path.join(dir_path, model_name)}/finished.txt', 'w') as f:
         f.write('Finished training model\n')
         f.write(f'Training started at {time}\n')
         f.write(f'Training finished at {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")}\n')
