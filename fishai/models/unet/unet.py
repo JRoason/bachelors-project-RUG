@@ -33,7 +33,6 @@ class UNet(nn.Module):
         super(UNet, self).__init__()
         self.encoder = Encoder(in_channels, num_blocks, features, dropout)
         self.decoder = Decoder(num_blocks, features, dropout, attention)
-        self.relu = nn.ReLU()
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
@@ -43,7 +42,6 @@ class UNet(nn.Module):
         """
         intermediates, x = self.encoder(x)
         outputs = self.decoder(intermediates, x)
-        outputs = self.relu(outputs) # Added this line to ensure the output is non-negative
         return outputs
 
 
