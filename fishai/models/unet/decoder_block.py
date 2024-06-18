@@ -47,7 +47,6 @@ class DecoderBlock(nn.Module):
         self.relu = nn.ReLU()
         self.conv_layer_2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding='same')
 
-
     def forward(self, x: torch.Tensor, down_tensor: torch.Tensor) -> torch.Tensor:
         """
         Forward pass through the decoder block. The input tensor is upsampled using the transposed convolutional layer,
