@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 from torchvision.transforms.v2 import CenterCrop
+from attention_gate import AttentionGate
 
 
 class DecoderBlock(nn.Module):
@@ -28,7 +29,7 @@ class DecoderBlock(nn.Module):
         Forward pass through the decoder block.
     """
 
-    def __init__(self, in_channels: int, out_channels: int, dropout: bool) -> None:
+    def __init__(self, in_channels: int, out_channels: int, dropout: bool, attention: bool) -> None:
         """
         Initializes a decoder block.
 
@@ -37,12 +38,15 @@ class DecoderBlock(nn.Module):
         :param out_channels: The number of output channels of the decoder block.
         :param dropout: Whether to use dropout in the model.
         """
+
         super(DecoderBlock, self).__init__()
+        self.attention = AttentionGate(out_channels, in_channels) if attention else None
         self.upconv = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
         self.dropout = nn.Dropout(0.5) if dropout else None
         self.conv_layer_1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding='same')
         self.relu = nn.ReLU()
         self.conv_layer_2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding='same')
+
 
     def forward(self, x: torch.Tensor, down_tensor: torch.Tensor) -> torch.Tensor:
         """
@@ -57,6 +61,16 @@ class DecoderBlock(nn.Module):
         :param down_tensor: The output tensor from the 'corresponding' encoder block.
         :return: The output tensor of the decoder block.
         """
+
+        # Based on https://arxiv.org/pdf/1804.03999, we would have an attention mechanism here, that takes
+        # the output tensor from the encoder block and the input tensor to the decoder block, and computes
+        # the attention weights. The attention weights are then multiplied with the output tensor from the
+        # encoder block to produce the attended tensor. This attended tensor is then concatenated with the
+        # input tensor to the decoder block. The rest of the forward pass remains the same.
+
+        if self.attention is not None:
+            down_tensor = self.attention(down_tensor, x)
+
         x = self.upconv(x)
         down_tensor = CenterCrop(x.shape[2:])(down_tensor)
         x = torch.cat([x, down_tensor], dim=1)

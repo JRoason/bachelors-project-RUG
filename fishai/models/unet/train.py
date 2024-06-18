@@ -4,6 +4,7 @@ import tqdm
 import sys
 import os
 import datetime
+import json
 
 from torch.utils.data import DataLoader
 from torch.nn import Module
@@ -15,7 +16,8 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')
 from data.dataloader import FishDataset
 
 
-def train(loader: DataLoader, model: Module, criterion: Module, optimizer: optim.Optimizer, device: str, bar: tqdm.tqdm) -> list:
+def train(loader: DataLoader, model: Module, criterion: Module, optimizer: optim.Optimizer, device: str,
+          bar: tqdm.tqdm) -> list:
     """
     Train the UNet model on the fish data.
 
@@ -106,8 +108,9 @@ def test(loader: DataLoader, model: Module, criterion: Module, device: str) -> l
     return losses
 
 
-def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, input_width: int,
-                output_width: int, offset_width: int, matrix_structure: str, dropout: bool, early_stopping: bool, device: str) -> None:
+def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, input_width: int, num_blocks: int,
+                output_width: int, offset_width: int, matrix_structure: str, dropout: bool,
+                early_stopping: bool, device: str) -> None:
     """
     Train the UNet model on the fish data.
 
@@ -115,6 +118,7 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     :param epochs: The total number of epochs.
     :param batch_size: The batch size.
     :param learning_rate: The learning rate.
+    :param num_blocks: The number of encoder/decoder blocks in the model.
     :param input_width: The width of the input window.
     :param output_width: The width of the target window.
     :param offset_width: The offset between the input and target windows.
@@ -124,7 +128,7 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     :param device: The device to train the model on.
     """
 
-    model = UNet(3, 4, 64, dropout).to(device)
+    model = UNet(3, num_blocks, 64, dropout).to(device)
     criterion = torch.nn.L1Loss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -145,7 +149,7 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     val_losses = []
 
     training_status = tqdm.tqdm(total=0, position=0, bar_format='{desc}')
-    progress_bar = tqdm.tqdm(total=(len(train_loader) + len(val_loader))*epochs, position=1, desc='Progress')
+    progress_bar = tqdm.tqdm(total=(len(train_loader) + len(val_loader)) * epochs, position=1, desc='Progress')
 
     for epoch in range(epochs):
         if len(val_losses) > 0:
@@ -184,29 +188,27 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
 
 if __name__ == '__main__':
     assert len(sys.argv) > 1, 'Please provide hyperparameters'
-    assert len(sys.argv) == 10, 'Please provide all hyperparameters'
+    assert len(sys.argv) == 11, 'Please provide all hyperparameters'
     hyperparameters = {
         'name': sys.argv[1],
         'epochs': int(sys.argv[2]),
         'batch_size': int(sys.argv[3]),
         'learning_rate': float(sys.argv[4]),
-        'input_width': int(sys.argv[5]),
-        'output_width': int(sys.argv[6]),
-        'offset_width': int(sys.argv[7]),
-        'dropout': sys.argv[8] == 'True',
-        'early_stopping': sys.argv[9] == 'True',
+        'num_blocks': int(sys.argv[5]),
+        'input_width': int(sys.argv[6]),
+        'output_width': int(sys.argv[7]),
+        'offset_width': int(sys.argv[8]),
+        'dropout': sys.argv[9] == 'True',
+        'early_stopping': sys.argv[10] == 'True',
         'device': 'cuda:0' if torch.cuda.is_available() else 'cpu',
     }
-    print(hyperparameters['dropout'])
-    print(hyperparameters['early_stopping'])
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     dir_path = os.path.dirname(os.path.realpath(__file__))
     if not os.path.exists(os.path.join(dir_path, hyperparameters['name'])):
         os.mkdir(os.path.join(dir_path, hyperparameters['name']))
     model_name = hyperparameters['name']
     with open(f'{model_name}/hyperparameters.txt', 'w') as f:
-        for key, value in hyperparameters.items():
-            f.write(f'{key}: {value}\n')
+        json.dump(hyperparameters, f)
     print("Training model, matrix_structure='diagonal'")
     hyperparameters['matrix_structure'] = 'diagonal'
     train_model(**hyperparameters)

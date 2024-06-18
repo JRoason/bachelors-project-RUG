@@ -32,6 +32,7 @@ class FishDataset(Dataset):
         """
         Initializes the dataset class for the fish data.
 
+        :param mode: The mode of the dataset.
         :param input_width: The width of the input window.
         :param output_width: The width of the target window.
         :param offset_width: The offset between the input and target windows.
