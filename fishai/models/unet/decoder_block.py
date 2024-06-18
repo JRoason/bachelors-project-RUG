@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torchvision.transforms.v2 import CenterCrop
+from torchvision.transforms import CenterCrop
 from attention_gate import AttentionGate
 
 
