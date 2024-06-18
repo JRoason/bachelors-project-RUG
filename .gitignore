@@ -4,3 +4,4 @@ __pycache__/
 .DS_Store
 old_README.md
 fishai/models/unet/U_NET_V*
+data/
