@@ -110,7 +110,7 @@ def test(loader: DataLoader, model: Module, criterion: Module, device: str) -> l
 
 def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, input_width: int, num_blocks: int,
                 output_width: int, offset_width: int, matrix_structure: str, dropout: bool,
-                early_stopping: bool, device: str, directory_path: str) -> None:
+                early_stopping: bool, attention: bool, device: str, directory_path: str) -> None:
     """
     Train the UNet model on the fish data.
 
@@ -125,11 +125,12 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     :param matrix_structure: The structure of the matrix.
     :param dropout: Whether to use dropout.
     :param early_stopping: Whether to use early stopping.
+    :param attention: Whether to use attention.
     :param device: The device to train the model on.
     :param directory_path: The path to the directory.
     """
 
-    model = UNet(3, num_blocks, 64, dropout).to(device)
+    model = UNet(3, num_blocks, 64, dropout, attention).to(device)
     criterion = torch.nn.L1Loss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -189,7 +190,7 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
 
 if __name__ == '__main__':
     assert len(sys.argv) > 1, 'Please provide hyperparameters'
-    assert len(sys.argv) == 11, 'Please provide all hyperparameters'
+    assert len(sys.argv) == 12, 'Please provide all hyperparameters'
     hyperparameters = {
         'name': sys.argv[1],
         'epochs': int(sys.argv[2]),
@@ -201,6 +202,7 @@ if __name__ == '__main__':
         'offset_width': int(sys.argv[8]),
         'dropout': sys.argv[9] == 'True',
         'early_stopping': sys.argv[10] == 'True',
+        'attention': sys.argv[11] == 'True',
         'device': 'cuda:0' if torch.cuda.is_available() else 'cpu',
     }
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
