@@ -18,7 +18,7 @@ from data.dataloader import FishDataset
 
 
 def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, input_width: int, num_blocks: int,
-                output_width: int, offset_width: int, matrix_structure: str, dropout: bool,
+                output_width: int, offset_width: int, matrix_structure: str, dropout: bool, segmentation: bool,
                 early_stopping: bool, device: str, directory_path: str) -> None:
     """
     Train the UNet model on the fish data.
@@ -33,6 +33,7 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     :param offset_width: The offset between the input and target windows.
     :param matrix_structure: The structure of the matrix.
     :param dropout: Whether to use dropout.
+    :param segmentation: Whether to use 'segmentation maps' of the fish data.
     :param early_stopping: Whether to use early stopping.
     :param device: The device to train the model on.
     :param directory_path: The path to the directory.
@@ -42,8 +43,8 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     criterion = torch.nn.L1Loss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-    train_dataset = FishDataset('train', input_width, output_width, offset_width, matrix_structure)
-    val_dataset = FishDataset('val', input_width, output_width, offset_width, matrix_structure)
+    train_dataset = FishDataset('train', input_width, output_width, offset_width, matrix_structure, segmentation)
+    val_dataset = FishDataset('val', input_width, output_width, offset_width, matrix_structure, segmentation)
 
     train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     val_loader = DataLoader(val_dataset, batch_size=batch_size, shuffle=True)
@@ -98,10 +99,11 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
 
 if __name__ == '__main__':
     assert len(sys.argv) > 1, 'Please provide hyperparameters'
-    assert len(sys.argv) == 7, 'Please provide all hyperparameters'
+    assert len(sys.argv) == 8, 'Please provide all hyperparameters'
     hyperparameters = {'name': sys.argv[1], 'epochs': int(sys.argv[2]), 'batch_size': int(sys.argv[3]),
                        'learning_rate': float(sys.argv[4]), 'dropout': sys.argv[5] == 'True',
                        'early_stopping': sys.argv[6] == 'True',
+                       'segmentation': sys.argv[7] == 'True',
                        'device': 'cuda:0' if torch.cuda.is_available() else 'cpu', 'input_width': 4, 'output_width': 1,
                        'offset_width': 0}
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
