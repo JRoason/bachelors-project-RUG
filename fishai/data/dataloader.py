@@ -28,7 +28,7 @@ class FishDataset(Dataset):
     """
 
     def __init__(self, mode: str, input_width: int, output_width: int, offset_width: int,
-                 matrix_structure: str) -> None:
+                 matrix_structure: str, segmentation: bool = False) -> None:
         """
         Initializes the dataset class for the fish data.
 
@@ -60,6 +60,7 @@ class FishDataset(Dataset):
         self.input_width = input_width
         self.output_width = output_width
         self.offset_width = offset_width
+        self.segmentation = segmentation
         self.data_time, self.target_time = f_window_gen(data, input_width, output_width, offset_width)
 
     def __len__(self) -> int:
@@ -96,13 +97,16 @@ class FishDataset(Dataset):
             temperature_input = torch.reshape(temperature_input,
                                               (1, temperature_input.shape[0], temperature_input.shape[1]))
             inputTensor = torch.cat((cod_input, salinity_input, temperature_input), dim=0)
-
-            targetTensor = torch.block_diag(self.target_time[idx][0], self.target_time[idx][1],
-                                            self.target_time[idx][2], self.target_time[idx][3])
-            targetTensor = torch.reshape(targetTensor, (1, targetTensor.shape[0], targetTensor.shape[1]))
+            if self.output_width > 1:
+                targetTensor = torch.block_diag(self.target_time[idx][0], self.target_time[idx][1],
+                                                self.target_time[idx][2], self.target_time[idx][3])
+                targetTensor = torch.reshape(targetTensor, (1, targetTensor.shape[0], targetTensor.shape[1]))
+            elif self.output_width == 1:
+                targetTensor = self.target_time[idx][0]
+                targetTensor = torch.reshape(targetTensor, (1, targetTensor.shape[0], targetTensor.shape[1]))
         elif self.matrix_structure == 'quadrant':
-            inputTensor = torch.zeros((3, (self.input_width // 2) * self.data.shape[2], (self.input_width // 2) * self.data.shape[2]))
-            targetTensor = torch.zeros(((self.output_width // 2) * self.data.shape[2], (self.output_width // 2) * self.data.shape[2]))
+            inputTensor = torch.zeros(
+                (3, (self.input_width // 2) * self.data.shape[2], (self.input_width // 2) * self.data.shape[2]))
             for i in range(self.input_width):
                 j = 0 if i < 2 else 1
                 inputTensor[0, i % 2 * self.data.shape[2]:(i % 2 + 1) * self.data.shape[2],
@@ -111,14 +115,25 @@ class FishDataset(Dataset):
                 j * self.data.shape[2]:(j + 1) * self.data.shape[2]] = self.data_time[idx][i][1]
                 inputTensor[2, i % 2 * self.data.shape[2]:(i % 2 + 1) * self.data.shape[2],
                 j * self.data.shape[2]:(j + 1) * self.data.shape[2]] = self.data_time[idx][i][2]
-            for i in range(self.output_width):
-                j = 0 if i == 0 or i == 3 else 1
-                targetTensor[i % 2 * self.data.shape[2]:(i % 2 + 1) * self.data.shape[2],
-                j * self.data.shape[2]:(j + 1) * self.data.shape[2]] = self.target_time[idx][i]
-            targetTensor = torch.reshape(targetTensor, (1, targetTensor.shape[0], targetTensor.shape[1]))
+            if self.output_width > 1:
+                targetTensor = torch.zeros(
+                    ((self.output_width // 2) * self.data.shape[2], (self.output_width // 2) * self.data.shape[2]))
+                for i in range(self.output_width):
+                    j = 0 if i == 0 or i == 3 else 1
+                    targetTensor[i % 2 * self.data.shape[2]:(i % 2 + 1) * self.data.shape[2],
+                    j * self.data.shape[2]:(j + 1) * self.data.shape[2]] = self.target_time[idx][i]
+                targetTensor = torch.reshape(targetTensor, (1, targetTensor.shape[0], targetTensor.shape[1]))
+            elif self.output_width == 1:
+                targetTensor = self.target_time[idx][0]
+                targetTensor = torch.reshape(targetTensor, (1, targetTensor.shape[0], targetTensor.shape[1]))
         elif self.matrix_structure == 'regular':
             inputTensor = torch.Tensor(self.data_time[idx])
             targetTensor = torch.Tensor(self.target_time[idx])
+
+        if self.segmentation:
+            # Convert the target tensor to a binary mask
+            inputTensor = torch.where(inputTensor > 0, 1, 0)
+            targetTensor = torch.where(targetTensor > 0, 1, 0)
 
         assert inputTensor is not None, 'Input tensor is None'
         assert targetTensor is not None, 'Target tensor is None'

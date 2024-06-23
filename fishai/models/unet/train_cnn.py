@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from torch.nn import Module
 
 from train import train, validate
-from cnn import CNN
+from cnn import ConvNet
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
@@ -38,7 +38,7 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     :param directory_path: The path to the directory.
     """
 
-    model = CNN(3, num_blocks, 64, dropout)
+    model = ConvNet(3, num_blocks, 64, dropout).to(device)
     criterion = torch.nn.L1Loss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
@@ -98,19 +98,12 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
 
 if __name__ == '__main__':
     assert len(sys.argv) > 1, 'Please provide hyperparameters'
-    assert len(sys.argv) == 10, 'Please provide all hyperparameters'
-    hyperparameters = {
-        'name': sys.argv[1],
-        'epochs': int(sys.argv[2]),
-        'batch_size': int(sys.argv[3]),
-        'learning_rate': float(sys.argv[4]),
-        'input_width': int(sys.argv[5]),
-        'output_width': int(sys.argv[6]),
-        'offset_width': int(sys.argv[7]),
-        'dropout': sys.argv[8] == 'True',
-        'early_stopping': sys.argv[9] == 'True',
-        'device': 'cuda:0' if torch.cuda.is_available() else 'cpu',
-    }
+    assert len(sys.argv) == 7, 'Please provide all hyperparameters'
+    hyperparameters = {'name': sys.argv[1], 'epochs': int(sys.argv[2]), 'batch_size': int(sys.argv[3]),
+                       'learning_rate': float(sys.argv[4]), 'dropout': sys.argv[5] == 'True',
+                       'early_stopping': sys.argv[6] == 'True',
+                       'device': 'cuda:0' if torch.cuda.is_available() else 'cpu', 'input_width': 4, 'output_width': 1,
+                       'offset_width': 0}
     time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     dir_path = os.path.dirname(os.path.realpath(__file__))
     hyperparameters['directory_path'] = dir_path
