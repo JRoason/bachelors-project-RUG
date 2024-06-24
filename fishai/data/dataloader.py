@@ -132,8 +132,8 @@ class FishDataset(Dataset):
 
         if self.segmentation:
             # Convert the target tensor to a binary mask
-            inputTensor = torch.where(inputTensor > 0, 1, 0)
-            targetTensor = torch.where(targetTensor > 0, 1, 0)
+            #inputTensor = torch.where(inputTensor > 0, 1.0, 0.0)
+            targetTensor = torch.where(targetTensor > 0, 1.0, 0.0)
 
         assert inputTensor is not None, 'Input tensor is None'
         assert targetTensor is not None, 'Target tensor is None'

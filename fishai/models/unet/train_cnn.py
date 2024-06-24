@@ -40,7 +40,11 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     """
 
     model = ConvNet(3, num_blocks, 64, dropout).to(device)
-    criterion = torch.nn.L1Loss()
+    if segmentation:
+        criterion = torch.nn.BCEWithLogitsLoss()
+    else:
+        criterion = torch.nn.L1Loss()
+        
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     train_dataset = FishDataset('train', input_width, output_width, offset_width, matrix_structure, segmentation)

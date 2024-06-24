@@ -36,6 +36,10 @@ def train(loader: DataLoader, model: Module, criterion: Module, optimizer: optim
     for k, (data, target) in enumerate(loader):
         data, target = data.to(device), target.to(device)
 
+        if k == 0:
+            print(target[0, 0, 26:31, 10:30])
+
+
         optimizer.zero_grad()
 
         output = model(data)
@@ -132,7 +136,12 @@ def train_model(name: str, epochs: int, batch_size: int, learning_rate: float, i
     """
 
     model = UNet(3, num_blocks, 64, dropout, attention).to(device)
-    criterion = torch.nn.L1Loss()
+
+    if segmentation:
+        criterion = torch.nn.L1Loss()
+    else:
+        criterion = torch.nn.BCEWithLogitsLoss()
+
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
     train_dataset = FishDataset('train', input_width, output_width, offset_width, matrix_structure, segmentation)
